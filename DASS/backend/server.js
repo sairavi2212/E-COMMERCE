@@ -82,7 +82,8 @@ app.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(404).json({ error: "Invalid email or password" });
     }
-    const token = jwt.sign({ userId: user._id , email:user.email}, JWT_SECRET, { expiresIn: '1h' });
+    // Extended token expiration to 30 days instead of 1 hour
+    const token = jwt.sign({ userId: user._id , email:user.email}, JWT_SECRET, { expiresIn: '30d' });
 
     res.json({ message: "Login successful", user , token: token});
   } catch (err) {
@@ -152,17 +153,23 @@ app.get('/products', async (req, res) => {
 
     if (req.headers.authorization && req.headers.authorization !== '') {
       const token = req.headers.authorization.split(' ')[1]; // Assuming the token is sent in the Authorization header
-      const decoded = jwt.verify(token, JWT_SECRET);
-      user_id = decoded.userId;
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        user_id = decoded.userId;
 
-      // Fetch the cart items for the user
-      const cartItems = await CartModel.find({ user_id });
+        // Fetch the cart items for the user
+        const cartItems = await CartModel.find({ user_id });
 
-      // Create a map of product IDs to their counts in the cart
-      productCountMap = cartItems.reduce((acc, item) => {
-        acc[item.product_id] = item.count;
-        return acc;
-      }, {});
+        // Create a map of product IDs to their counts in the cart
+        productCountMap = cartItems.reduce((acc, item) => {
+          acc[item.product_id] = item.count;
+          return acc;
+        }, {});
+      } catch (tokenError) {
+        // If token verification fails, continue without user authentication
+        console.log("Token verification failed:", tokenError.message);
+        // Don't return an error, just continue without user-specific data
+      }
     }
 
     const products = await ProductModel.find();
@@ -187,19 +194,29 @@ app.get('/products', async (req, res) => {
 
 app.get('/products/:id', async (req, res) => {
   try {
-    const token = req.headers.authorization.split(' ')[1]; // Assuming the token is sent in the Authorization header
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user_id = decoded.userId;
+    let user_id = null;
+    let count = 0;
+
+    if (req.headers.authorization && req.headers.authorization !== '') {
+      const token = req.headers.authorization.split(' ')[1];
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        user_id = decoded.userId;
+        
+        // Fetch the cart item for the user and product
+        const cartItem = await CartModel.findOne({ user_id, product_id: req.params.id });
+        count = cartItem ? cartItem.count : 0;
+      } catch (tokenError) {
+        // If token verification fails, continue without user authentication
+        console.log("Token verification failed for specific product:", tokenError.message);
+        // Don't return an error, just continue without user-specific data
+      }
+    }
 
     const product = await ProductModel.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
-
-    // Fetch the cart item for the user and product
-    const cartItem = await CartModel.findOne({ user_id, product_id: req.params.id });
-    const count = cartItem ? cartItem.count : 0;
-
 
     // Fetch the seller information
     const seller = await UserModel.findById(product.seller_id, 'firstname lastname');
@@ -220,12 +237,24 @@ app.get('/products/:id', async (req, res) => {
 });
 
 app.post('/addtocart/:id', async (req, res) => {
-  const token = req.headers.authorization.split(' ')[1];
-  const decoded = jwt.verify(token, JWT_SECRET);
-  const user_id = decoded.userId;
-  const product_id = req.params.id;  
   try {
+    if (!req.headers.authorization) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const token = req.headers.authorization.split(' ')[1];
+    let user_id;
+    
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      user_id = decoded.userId;
+    } catch (tokenError) {
+      return res.status(401).json({ error: "Token expired. Please log in again." });
+    }
+    
+    const product_id = req.params.id;  
     const existingCartItem = await CartModel.findOne({ user_id, product_id });
+    
     if (existingCartItem) {
       existingCartItem.count += 1;
       await existingCartItem.save();
@@ -242,12 +271,23 @@ app.post('/addtocart/:id', async (req, res) => {
 
 
 app.post('/decreasecount/:id', async (req, res) => {
-  const token = req.headers.authorization.split(' ')[1];
-  const decoded = jwt.verify(token, JWT_SECRET);
-  const user_id = decoded.userId;
-  const product_id = req.params.id;
-
   try {
+    if (!req.headers.authorization) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    const token = req.headers.authorization.split(' ')[1];
+    let user_id;
+    
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      user_id = decoded.userId;
+    } catch (tokenError) {
+      return res.status(401).json({ error: "Token expired. Please log in again." });
+    }
+    
+    const product_id = req.params.id;
+
     const cartItem = await CartModel.findOne({ user_id, product_id });
     if (cartItem && cartItem.count > 0) {
       cartItem.count -= 1;
@@ -316,20 +356,30 @@ app.get('/viewcart/:user_id', async (req, res) => {
 
 
 app.post('/sell', async (req, res) => {
-  const token = req.headers.authorization.split(' ')[1];
-  const decoded = jwt.verify(token, JWT_SECRET);
-  const seller_id = decoded.userId; 
-
-
-  const { name, category, description, price, image } = req.body;
   try {
+    if (!req.headers.authorization) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const token = req.headers.authorization.split(' ')[1];
+    let seller_id;
+    
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      seller_id = decoded.userId;
+    } catch (tokenError) {
+      return res.status(401).json({ error: "Token expired. Please log in again." });
+    }
+    
+    const { name, category, description, price, image } = req.body;
+    
     const product = await ProductModel.create({
       name,
       category,
       description,
       price,
       image,
-      seller_id, // Use seller_id to match the ProductModel
+      seller_id,
     });
 
     res.json({ message: "Product listed for sale successfully", product });
