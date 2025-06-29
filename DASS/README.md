@@ -1,70 +1,158 @@
-# Getting Started with Create React App
+# E-Commerce Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack e-commerce application built with the MERN stack (MongoDB, Express.js, React.js, Node.js) that offers comprehensive shopping, selling, and order management features.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+### User Management
+- Secure user authentication with JWT tokens
+- Registration with reCAPTCHA verification to prevent bots
+- User profile management and editing
+- Role-based access control (buyers and sellers)
 
-### `npm start`
+### Product Management
+- Product browsing with dynamic category filtering
+- Search functionality by product name and category
+- Detailed product view with seller information
+- Seller dashboard for product listing
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Shopping Experience
+- Interactive shopping cart management
+- Add/remove items and adjust quantities
+- Secure checkout process
+- Order history tracking
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Order Processing
+- Order tracking for both buyers and sellers
+- OTP-based delivery verification system
+- Status updates (pending, processed, delivered)
+- Separate views for pending and completed orders/deliveries
 
-### `npm test`
+### User Interface
+- Responsive design for all device sizes
+- Material UI components for modern look and feel
+- Intuitive navigation and user flow
+- Interactive chatbot powered by Google's Generative AI
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Tech Stack
 
-### `npm run build`
+### Frontend
+- React.js 19.0.0 with React Router for navigation
+- Material UI & MUI Joy for UI components
+- Axios for API requests
+- JWT for secure authentication
+- React Google reCAPTCHA for security
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Backend
+- Node.js with Express.js
+- MongoDB with Mongoose for database operations
+- JWT for authentication and authorization
+- bcryptjs for password hashing
+- Google Generative AI for chatbot functionality
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Installation and Setup
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Prerequisites
+- Node.js (v14.0.0 or higher)
+- MongoDB (v4.0.0 or higher)
+- npm (v6.0.0 or higher)
+- Google reCAPTCHA API keys (for user registration)
+- Google Generative AI API key (for chatbot)
 
-### `npm run eject`
+### Backend Setup
+1. Navigate to the backend directory:
+   ```
+   cd backend
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+2. Install the dependencies:
+   ```
+   npm install
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. Create a `.env` file in the project root with the following contents:
+   ```
+   MONGODB_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret
+   PORT=4000
+   RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key
+   GOOGLE_API_KEY=your_google_generative_ai_api_key
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+4. Start the backend server:
+   ```
+   npm run dev
+   ```
+   The server will run on http://localhost:4000 with hot-reloading enabled
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Frontend Setup
+1. Navigate to the frontend directory:
+   ```
+   cd frontend
+   ```
 
-## Learn More
+2. Install the dependencies:
+   ```
+   npm install
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+3. Start the frontend development server:
+   ```
+   npm start
+   ```
+   The application will open in your browser at http://localhost:3000
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Usage Guide
 
-### Code Splitting
+### For Buyers
+1. Register a new account or login with existing credentials
+2. Browse products, filter by category, or search for specific items
+3. Click on products to view details and add to cart
+4. View and manage your cart contents
+5. Proceed to checkout to place an order
+6. Track your pending orders through the "My Pending Orders" section
+7. View your order history in the "My Completed Orders" section
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### For Sellers
+1. Navigate to the "Sell" page to list your products
+2. Fill in product details including name, category, description, price, and image URL
+3. View incoming orders in the "My Pending Deliveries" section
+4. Verify deliveries using the OTP provided by buyers
+5. Track completed sales in the "My Completed Deliveries" section
 
-### Analyzing the Bundle Size
+### Using the Chatbot
+- Click the chat icon in the bottom-right corner to open the chatbot
+- Ask questions about products, ordering process, or request assistance
+- The AI-powered chatbot will provide relevant information and help
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Project Structure
 
-### Making a Progressive Web App
+### Frontend Structure
+- `frontend/src/components/` 
+  - `assets/`: Images and static resources
+  - `eachprod/`: Product card components
+  - `eachorder/`: Order card components
+  - `navbar/`: Navigation components
+- `frontend/src/pages/`: Application pages
+  - User authentication pages (login_sign)
+  - Product browsing and details
+  - Cart and checkout
+  - Order management
+  - User profile
+  - Chatbot interface
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Backend Structure
+- `backend/models/`: MongoDB schemas
+  - User model
+  - Product model
+  - Cart model
+  - Order model
+- `backend/server.js`: Main server file with API routes
+  - Authentication endpoints
+  - Product management endpoints
+  - Cart and order processing
+  - Chatbot integration
 
-### Advanced Configuration
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License.
